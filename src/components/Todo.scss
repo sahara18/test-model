@@ -1,0 +1,9 @@
+.todo {
+  &-info {
+    color: grey;
+  }
+
+  &_completed {
+    text-decoration: line-through;
+  }
+}
