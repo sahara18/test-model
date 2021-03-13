@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {toJS} from 'utils/immutable';
 
 export class Observable<T> {
   private value: T;
@@ -8,14 +9,16 @@ export class Observable<T> {
     this.value = value;
   }
 
-  get(): T {
+  get() {
     return this.value;
   }
 
   set(value: T) {
-    this.value = value;
-    for (const fn of this.subscribers) {
-      fn(value);
+    if (this.value !== value) {
+      this.value = value;
+      for (const fn of this.subscribers) {
+        fn(value);
+      }
     }
     return this.value;
   }
@@ -31,6 +34,10 @@ export class Observable<T> {
   off(fn: Function) {
     const index = this.subscribers.findIndex((f) => f === fn);
     this.subscribers.splice(index, 1);
+  }
+
+  toJSON() {
+    return toJS(this.get());
   }
 }
 

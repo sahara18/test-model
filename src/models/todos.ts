@@ -1,7 +1,9 @@
 import {v4 as uuid} from 'uuid';
-import autobind from 'autobind-decorator';
 import {List, Record} from 'immutable';
-import {Observable} from 'utils/Observable';
+import {Observable} from 'utils/observable';
+import {Saga} from 'utils/types';
+import {take} from 'utils/saga';
+import {action, key} from 'utils';
 
 export interface ITodo {
   id: string;
@@ -15,39 +17,45 @@ export interface ITodoNew {
   info?: string;
 }
 
-export const RecordTodo = Record<ITodo>({
+export const TodoRecord = Record<ITodo>({
   id: '',
   title: '',
   info: '',
   completed: false,
 });
 
-export const RecordTodoNew = Record<ITodoNew>({
+export const TodoNewRecord = Record<ITodoNew>({
   title: '',
   info: '',
 });
 
-@autobind class Todos {
+class Todos {
+  @key public readonly type?: string;
+
   readonly data = new Observable<List<Record<ITodo>>>(List([
-    new RecordTodo({id: uuid(), title: 'Learn JS', info: 'test description'}),
-    new RecordTodo({id: uuid(), title: 'Buy staff'}),
-    new RecordTodo({id: uuid(), title: 'Actualize diff'}),
+    new TodoRecord({id: uuid(), title: 'Learn JS', info: 'test description'}),
+    new TodoRecord({id: uuid(), title: 'Buy staff'}),
+    new TodoRecord({id: uuid(), title: 'Actualize diff'}),
   ]));
 
-  add(todo: ITodoNew) {
+  constructor(type?: string) {
+    this.type = type;
+  }
+
+  @action add(todo: ITodoNew) {
     this.data.update(data => (
-      data.push(new RecordTodo(todo).set('id', uuid()))
+      data.push(new TodoRecord(todo).set('id', uuid()))
     ));
   }
 
-  remove(id: string) {
+  @action remove(id: string) {
     const index = this.findById(id);
     if (index >= 0) {
       this.data.update(data => data.remove(index));
     }
   }
 
-  setCompleted(id: string, completed: boolean) {
+  @action setCompleted(id: string, completed: boolean) {
     const index = this.findById(id);
     if (index >= 0) {
       this.data.update(data => (
@@ -60,6 +68,17 @@ export const RecordTodoNew = Record<ITodoNew>({
     return this.data.get()
       .findIndex((todo) => todo.get('id') === id);
   }
+
+  * watchSetCompleted(num: number): Saga {
+    for (let i = 0; i < num; ) {
+      const takenAction = yield take(this.setCompleted);
+      // @ts-ignore
+      const [, completed] = takenAction.payload;
+      if (completed) i++;
+    }
+
+    alert(`Congratulations! You've completed ${num} tasks!`);
+  }
 }
 
-export default new Todos();
+export default new Todos('main');

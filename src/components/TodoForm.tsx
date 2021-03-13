@@ -1,12 +1,12 @@
 import {ChangeEvent, memo, useCallback, useState} from 'react';
 import {Record} from 'immutable';
-import {ITodoNew, RecordTodoNew} from 'models/todos';
+import {ITodoNew, TodoNewRecord} from 'models/todos';
 
 interface IProps {
   onSubmit: (values: ITodoNew) => void;
 }
 
-const initialValues = new RecordTodoNew({
+const initialValues = new TodoNewRecord({
   title: '',
   info: '',
 });
