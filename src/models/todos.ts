@@ -2,8 +2,9 @@ import {v4 as uuid} from 'uuid';
 import {List, Record} from 'immutable';
 import {Observable} from 'utils/observable';
 import {Saga} from 'utils/types';
-import {take} from 'utils/saga';
 import {action, key} from 'utils';
+import {log} from 'utils/test-log';
+import {call, take} from 'utils/saga';
 
 export interface ITodo {
   id: string;
@@ -71,13 +72,13 @@ class Todos {
 
   * watchSetCompleted(num: number): Saga {
     for (let i = 0; i < num; ) {
-      const takenAction = yield take(this.setCompleted);
+      const takenAction = yield take(this.setCompleted); // TODO improve effect type!
       // @ts-ignore
       const [, completed] = takenAction.payload;
       if (completed) i++;
     }
 
-    alert(`Congratulations! You've completed ${num} tasks!`);
+    yield call(log, `Congratulations! You've completed ${num} tasks!`);
   }
 }
 

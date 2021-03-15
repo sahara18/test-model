@@ -1,35 +1,42 @@
-import {Effect, EffectTake} from 'utils/types';
-import channel from './channel';
+import {Action, CallReturnType, FnDefault, PromiseResolveType} from 'utils/types';
+import {isPromise} from 'utils/assert';
+import channel from 'utils/channel';
+import {Observable} from 'utils/observable';
 
-export enum Effects {
-  TAKE = 'effect/TAKE',
-}
-
-const effectDispatched = (effectType: string) => (
-  new Promise((resolve) => {
-    channel.on(effectType, resolve);
-  })
-);
-
-export const runSaga = async <T>(it: Iterator<Effect, Effect | T, any>): Promise<void> => {
+export const runSaga = async (it: Iterator<any, any, any>): Promise<void> => {
   let nextValue = undefined;
 
   while (true) {
-    const {value: effect, done} = it.next(nextValue);
+    const {value, done} = it.next(nextValue);
 
-    if (effect && 'type' in effect) {
-      switch (effect.type) {
-        case Effects.TAKE:
-          nextValue = await effectDispatched(effect.payload);
-          break;
-      }
-    }
+    nextValue = isPromise(value)
+      ? await value
+      : undefined;
 
     if (done) break;
   }
 };
 
-export const take = (fn: Function): EffectTake => ({
-  type: Effects.TAKE,
-  payload: fn.toString(),
-});
+export function get<T>(ob: Observable<T>): Promise<T> {
+  return Promise.resolve(ob.get());
+}
+
+export function call<Fn extends FnDefault>(fn: Fn, ...args: Parameters<Fn>): ReturnType<Fn>;
+export function call<Fn extends Promise<any>>(fn: Fn): PromiseResolveType<Fn>;
+export function call<Fn>(
+  fn: Fn,
+  ...args: Fn extends FnDefault ? Parameters<Fn> : any[]
+): Promise<CallReturnType<Fn>> {
+  if (isPromise(fn)) return fn;
+
+  // @ts-ignore
+  return Promise.resolve(fn(...args));
+}
+
+export function take<Fn extends FnDefault>(
+  fn: Fn,
+): Promise<Action<Parameters<Fn>>> {
+  return call(new Promise<ReturnType<Fn>>((resolve) => {
+    channel.on(fn.toString(), resolve);
+  }));
+}

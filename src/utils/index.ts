@@ -1,4 +1,5 @@
 import channel from 'utils/channel';
+import {Action} from 'utils/types';
 
 export const key: PropertyDecorator = (target, key) => {
   // @ts-ignore
@@ -10,7 +11,7 @@ export const action: MethodDecorator = (target, key, descriptor) => {
   let fn = descriptor.value;
 
   if (typeof fn !== 'function') {
-    throw new TypeError(`@action decorator can only be applied to methods not: ${typeof fn}`);
+    throw new TypeError(`@action decorator can only be applied to methods, not ${typeof fn}`);
   }
 
   // In IE11 calling Object.defineProperty has a side-effect of evaluating the
@@ -36,7 +37,8 @@ export const action: MethodDecorator = (target, key, descriptor) => {
         channel.emit(actionType, {
           type: actionType,
           payload: args,
-        });
+        } as Action);
+
         // @ts-ignore
         return fn.apply(this, args);
       };
@@ -74,10 +76,4 @@ export const action: MethodDecorator = (target, key, descriptor) => {
 //       // console.log('model', this, this.login);
 //     }
 //   };
-// };
-//
-// export const saga: MethodDecorator = (target, key, descriptor) => {
-//   // @ts-ignore
-//   // target[key].toString = (): string => [target.constructor.name, key].join('/');
-//   return descriptor;
 // };
