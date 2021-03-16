@@ -32,18 +32,17 @@ export const action: MethodDecorator = (target, key, descriptor) => {
       const actionType = [target.constructor.name, this[this.key], key]
         .filter(Boolean)
         .join('/');
-
       const boundFn = (...args: any[]) => {
         channel.emit(actionType, {
           type: actionType,
           payload: args,
         } as Action);
-
         // @ts-ignore
         return fn.apply(this, args);
       };
-      definingProperty = true;
+      boundFn.toString = () => actionType;
 
+      definingProperty = true;
       Object.defineProperty(this, key, {
         configurable: true,
         get() {
@@ -56,7 +55,6 @@ export const action: MethodDecorator = (target, key, descriptor) => {
       });
       definingProperty = false;
 
-      boundFn.toString = () => actionType;
       return boundFn;
     },
     set(value) {

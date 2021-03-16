@@ -1,10 +1,10 @@
 import {v4 as uuid} from 'uuid';
 import {List, Record} from 'immutable';
 import {Observable} from 'utils/observable';
-import {Saga} from 'utils/types';
+import {SagaIterator} from 'utils/types';
 import {action, key} from 'utils';
 import {log} from 'utils/test-log';
-import {call, take} from 'utils/saga';
+import {call, cancel, take} from 'utils/saga';
 
 export interface ITodo {
   id: string;
@@ -65,21 +65,33 @@ class Todos {
     }
   }
 
-  private findById(id: string) {
-    return this.data.get()
-      .findIndex((todo) => todo.get('id') === id);
-  }
-
-  * watchSetCompleted(num: number): Saga {
-    for (let i = 0; i < num; ) {
+  @action* watchSetCompletedAndLog(): SagaIterator {
+    for (let i = 0; i < 3; ) {
       const takenAction = yield take(this.setCompleted); // TODO improve effect type!
+      console.log({takenAction});
       // @ts-ignore
       const [, completed] = takenAction.payload;
       if (completed) i++;
     }
 
-    yield call(log, `Congratulations! You've completed ${num} tasks!`);
+    yield call(log, `Congratulations! You've completed ${3} tasks!`);
+  }
+
+  private findById(id: string) {
+    return this.data.get()
+      .findIndex((todo) => todo.get('id') === id);
   }
 }
 
-export default new Todos('main');
+const todos = new Todos('main');
+
+export function* watchSetCompletedAndCancel(): SagaIterator {
+  for (let i = 0; i < 2; i++) {
+    yield take(todos.setCompleted);
+  }
+
+  yield cancel(todos.watchSetCompletedAndLog);
+  yield call(log, 'Canceled watchSetCompletedAndLog');
+}
+
+export default todos;
