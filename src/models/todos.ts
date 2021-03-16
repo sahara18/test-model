@@ -65,16 +65,25 @@ class Todos {
     }
   }
 
+  @action* someInnerTakes(num: number): SagaIterator {
+    for (let i = 0; i < num; ) {
+      const takenAction: any = yield take(this.setCompleted); // TODO improve effect type!
+      const [, completed] = takenAction.payload;
+      if (completed) i++;
+    }
+  }
+
+  // in-model saga example
   @action* watchSetCompletedAndLog(): SagaIterator {
-    for (let i = 0; i < 3; ) {
-      const takenAction = yield take(this.setCompleted); // TODO improve effect type!
-      console.log({takenAction});
-      // @ts-ignore
+    for (let i = 0; i < 2; ) {
+      const takenAction: any = yield take(this.setCompleted); // TODO improve effect type!
       const [, completed] = takenAction.payload;
       if (completed) i++;
     }
 
-    yield call(log, `Congratulations! You've completed ${3} tasks!`);
+    yield call(log, 'One step left..');
+    yield call(this.someInnerTakes, 1);
+    yield call(log, `Congratulations! You've completed ${3} tasks.`);
   }
 
   private findById(id: string) {
@@ -85,6 +94,7 @@ class Todos {
 
 const todos = new Todos('main');
 
+// external saga example
 export function* watchSetCompletedAndCancel(): SagaIterator {
   for (let i = 0; i < 2; i++) {
     yield take(todos.setCompleted);

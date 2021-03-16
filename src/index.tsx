@@ -15,7 +15,7 @@ ReactDOM.render(
 
 runSaga(
   todos.watchSetCompletedAndLog,
-  watchSetCompletedAndCancel,
+  watchSetCompletedAndCancel, // comment to test cancel
 );
 
 // If you want to start measuring performance in your app, pass a function

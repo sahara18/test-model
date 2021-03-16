@@ -1,11 +1,20 @@
 import channel from 'utils/channel';
 import {Action} from 'utils/types';
 
+/*
+* Decorator to mark model 'key' field, used to make model actionTypes relatively:
+* e.g. 'Todos/main/setCompleted', where 'main' is the key
+* */
 export const key: PropertyDecorator = (target, key) => {
   // @ts-ignore
   target.key = key;
 };
 
+/*
+* Decorator to mark model 'action' method, which is
+* - getting autobinded
+* - getting toString returning actionType
+* */
 // @ts-ignore
 export const action: MethodDecorator = (target, key, descriptor) => {
   let fn = descriptor.value;
